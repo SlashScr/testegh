@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Serviços</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://cdn.dribbble.com/users/189524/screenshots/2110114/media/2a132afeebedf4f7591b14872379f187.gif');
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-color: #111;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            max-width: 450px;
+            color: #fff;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ccc;
+        }
+        th {
+            background-color: #333;
+        }
+        .voltar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #b1006d;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .voltar:hover {
+            background-color: #890055;
+        }
+        .media {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Serviços</h1>
+        <?php
+        
+        $servername = "localhost";
+        $username = "root";
+        $password = "admin";
+        $dbname = "teste";
+
+       
+        $conn = new mysqli($servername, $username, $password, $dbname);
+
+        
+        if ($conn->connect_error) {
+            die("Falha na conexão: " . $conn->connect_error);
+        }
+
+   
+        $sql = "SELECT servico, 
+                       SEC_TO_TIME(SUM(ABS(TIME_TO_SEC(TIMEDIFF(CONCAT(inicio, ' ', hora_inicio), CONCAT(fim, ' ', hora_fim)))))) AS tempo_total 
+                FROM dados 
+                GROUP BY servico";
+
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            echo "<table>";
+            echo "<tr><th>Serviço</th><th>Tempo Total</th></tr>";
+
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row["servico"] . "</td>";
+                $tempo_total = $row["tempo_total"];
+                $tempo_total_array = explode(":", $tempo_total);
+                $hours = $tempo_total_array[0];
+                $minutes = $tempo_total_array[1];
+                echo "<td>{$hours}h {$minutes}m</td>";
+                echo "</tr>";
+            }
+
+            echo "</table>";
+        } else {
+            echo "Nenhum serviço encontrado.";
+        }
+
+      
+        $sql_media = "SELECT SEC_TO_TIME(AVG(ABS(TIME_TO_SEC(TIMEDIFF(CONCAT(inicio, ' ', hora_inicio), CONCAT(fim, ' ', hora_fim)))))) AS media_tempo FROM dados";
+
+        $result_media = $conn->query($sql_media);
+
+        if ($result_media->num_rows > 0) {
+            $row_media = $result_media->fetch_assoc();
+            $media_tempo = $row_media["media_tempo"];
+            $media_tempo = substr($media_tempo, 0, 5);
+            echo "<div class='media'>Tempo Médio de Serviço: " . $media_tempo . "</div>";
+        }
+
+
+        $conn->close();
+        ?>
+    </div>
+    <a class="voltar" href="teste.php">Voltar para o Formulário</a>
+</body>
+</html>
